@@ -1,0 +1,17 @@
+<html>
+<head>
+	<script src="http://localhost:1337/socket.io/socket.io.js"></script>
+	<script src="http://code.jquery.com/jquery-1.9.0.min.js"></script>
+	<script>
+	var socket = io.connect('http://localhost:1337');
+	socket.on('messages', function (data) {
+		$('#messages').append('<li>' + data.message + '</li>');
+	});
+	</script>
+</head>
+<body>
+	<ul id="messages">
+	</ul>
+</body>
+</html>
+
