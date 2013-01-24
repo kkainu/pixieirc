@@ -4,13 +4,13 @@
 	<script src="http://code.jquery.com/jquery-1.9.0.min.js"></script>
 	<script>
 	var socket = io.connect('http://localhost:1337');
-	socket.on('messages', function (data) {
-		$('#messages').append('<li>' + data.message + '</li>');
+	socket.on('images', function (data) {
+		$('#images').append('<li>' + data.url + '</li>');
 	});
 	</script>
 </head>
 <body>
-	<ul id="messages">
+	<ul id="images">
 	</ul>
 </body>
 </html>
