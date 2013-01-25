@@ -5,9 +5,13 @@
 	<script>
 	var socket = io.connect('http://localhost:1337');
 	socket.on('images', function (data) {
-		$('#images').append('<li>' + data.url + '</li>');
+		$('#images').prepend('<li><img src="' + data.url + '" /></li>');
 	});
 	</script>
+
+	<style type="text/css">
+		ul { list-style: none; }
+	</style>
 </head>
 <body>
 	<ul id="images">

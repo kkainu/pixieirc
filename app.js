@@ -7,18 +7,22 @@ var imageUrlRegExp = /(f|ht)tps?:\/\/.+?(jpg|png)(\s|$)/gi
 
 var client = new irc.Client('localhost', 'pixie', { channels: ['#pixie'] })
 
-var images = Bacon.fromEventTarget(client, 'message', function(from, to, message) { return message })
-					.filter(function(message) {
-						return imageUrlRegExp.test(message)	
-					})
-					.map(function(message) {
-						return message.match(imageUrlRegExp)
-					})
+var images = Bacon.fromEventTarget(client, 'message', function(from, to, message) { 
+	return message 
+})
+.filter(function(message) {
+	var isImage = imageUrlRegExp.test(message)
+	imageUrlRegExp.lastIndex = 0
+	return isImage
+})
+.map(function(message) {
+	return message.match(imageUrlRegExp)
+})
 
 io.sockets.on('connection', function (socket) {
-	images.onValue(function(images) {
-		images.forEach(function(image) {
-		    socket.emit('images', { url: image })	
+	images.onValue(function(pics) {
+		pics.forEach(function(pic) {
+		    socket.emit('images', { url: pic.trim() })
 		})
 	})
 })
