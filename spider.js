@@ -6,62 +6,68 @@ var urls = require('url');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 
-var Spider = function() {
+var Spider = function(url) {
 	var self = this;
 	this.handled = {};
-	this.queue = async.queue(parseImagesAndLinks, 5);
+	this.queue = async.queue(parseImagesAndLinks, 1);
+	this.base = urls.parse(url).protocol + '//' + urls.parse(url).host;
+	this.initialUrl = url;
 
 	function parseImagesAndLinks(task, callback) {
-		request({
-			uri: task.url,
-		}, function(error, response, body) {
-			try {
-				if(shouldHandle(task.url)) {
-					var $ = cheerio.load(body);
-					var url = urls.parse(task.url);
-					var base = url.protocol + '//' + url.host;
+		setTimeout(function() {
+			request({
+				uri: task.url,
+			}, function(error, response, body) {
+				try {
+					if(isFromSameDomain(task.url)) {
+						console.log("handling url: " + task.url)
+						var $ = cheerio.load(body);
 
-					$("a").each(function() {
-						handleLink($(this).attr('href'), base);
-					});
-					$("img").each(function() {
-						handleImage($(this).attr('src'), base);
-					});
-					self.handled[task.url] = true;
+						$("a").each(function() {
+							handleLink($(this).attr('href'));
+						});
+						$("img").each(function() {
+							handleImage($(this).attr('src'));
+						});
+					}
+				} catch(e) {
+					console.log('Exception: ' + e.stack);
 				}
-			} catch(e) {
-				console.log('Exception: ' + e.stack);
-			}
-			callback(task);
-		});
+				callback(task);
+			});
+		},1000)
 	}
 
-	function shouldHandle(url) {
-		return url !== undefined && !_.has(self.handled, url);
+	function handled(url) {
+		return url == undefined || _.has(self.handled, url);
 	}
 
-	function isFromSameDomain(url, base) {
-		return url !== undefined && (url.search(/(f|ht)tps?:\/\//) != 0 || url.indexOf(base) == 0);
+	function isFromSameDomain(url) {
+		return url !== undefined && (url.search(/(f|ht)tps?:\/\//) != 0 || url.indexOf(self.base) == 0);
 	}
 
-	function handleLink(url, base) {
-		if(isFromSameDomain(url,base)) self.queue.push({url: urls.resolve(base,url)}, processedCallback);
+	function handleLink(url) {
+		if(!handled(url)) {
+			self.queue.push({url: urls.resolve(self.base,url)}, processedCallback);
+			self.handled[url] = true;
+		}
 	}
 
-	function handleImage(url, base) {
-		var imageUrl = isFromSameDomain(url, base) ? urls.resolve(base,url) : url;
-		self.emit("image", {url: imageUrl});
+	function handleImage(url) {
+		if(!handled(url)) {
+			var imageUrl = isFromSameDomain(url) ? urls.resolve(self.base,url) : url;
+			self.emit("image", {url: imageUrl});
+			self.handled[url] = true;
+		}
 	}
 
-	function processedCallback(task) {
-		//console.log('finished processing url: ' + task.url);
-	}
+	function processedCallback(task) {}
 }
 
 util.inherits(Spider, EventEmitter);
 
-Spider.prototype.crawl = function(url) {
-	this.queue.push([{url: url}], this.processedCallback);	
+Spider.prototype.crawl = function() {
+	this.queue.push([{url: this.initialUrl}], this.processedCallback);	
 }
 
 exports.spider = Spider;
