@@ -14,28 +14,28 @@ var Spider = function(url) {
 	this.initialUrl = url;
 
 	function parseImagesAndLinks(task, callback) {
-		setTimeout(function() {
-			request({
-				uri: task.url,
-			}, function(error, response, body) {
-				try {
-					if(isFromSameDomain(task.url)) {
-						console.log("handling url: " + task.url)
-						var $ = cheerio.load(body);
+		setTimeout(function() {request({uri: task.url}, handlePage(task, callback));},1000)
+	}
 
-						$("a").each(function() {
-							handleLink($(this).attr('href'));
-						});
-						$("img").each(function() {
-							handleImage($(this).attr('src'));
-						});
-					}
-				} catch(e) {
-					console.log('Exception: ' + e.stack);
+	function handlePage(task, callback) {
+		return function(error, response, body) {
+			try {
+				if(isFromSameDomain(task.url)) {
+					console.log("handling url: " + task.url)
+					var $ = cheerio.load(body);
+
+					$("a").each(function() {
+						handleLink($(this).attr('href'));
+					});
+					$("img").each(function() {
+						handleImage($(this).attr('src'));
+					});
 				}
-				callback(task);
-			});
-		},1000)
+			} catch(e) {
+				console.log('Exception: ' + e.stack);
+			}
+			callback(task);
+		}
 	}
 
 	function handled(url) {

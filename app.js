@@ -42,3 +42,5 @@ io.sockets.on('connection', function (socket) {
 })
 
 spider.crawl()
+
+setInterval(function() { console.log('aasdf') }, 500)
