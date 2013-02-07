@@ -70,6 +70,6 @@ Spider.prototype.crawl = function() {
 	this.queue.push([{url: this.initialUrl}], this.processedCallback);	
 }
 
-exports.spider = Spider;
+exports.webspider = Spider;
 
 
