@@ -25,6 +25,7 @@ var Spider = function(url) {
             return function(error, response, body) {
                 try {
                     if(isFromSameDomain(task.url)) {
+                        util.debug('handling url: ' + task.url);
                         var $ = cheerio.load(body);
 
                         $("a").each(function() {
